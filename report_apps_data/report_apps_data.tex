@@ -1,0 +1,175 @@
+\documentclass[11pt]{article}
+\topmargin       -5.0mm
+\headheight       0.0mm
+\headsep          0.0mm
+\oddsidemargin    0.0mm
+\evensidemargin   0.0mm
+\textheight       210mm
+\textwidth        175mm
+
+\usepackage{amsmath,amsfonts,amsthm,amssymb}
+\usepackage{latexsym,mathrsfs}
+\usepackage{graphicx}
+\usepackage{enumerate}
+\usepackage{latexsym}
+\usepackage{color}
+\usepackage{pstricks}
+\usepackage{overpic}
+\usepackage[ruled,vlined,algosection,linesnumbered]{algorithm2e}
+\usepackage{subfigure}
+%\usepackage{hyperref}
+\usepackage{url}
+\usepackage{multirow}
+
+\newtheorem{proposition}{Proposition}[section]
+\newtheorem{theorem}{Theorem}[section]
+%\newtheorem{algorithm}{Algorithm}[section]
+\newtheorem{lemma}{Lemma}[section]
+\newtheorem{definition}{Definition}[section]
+\newtheorem{corollary}{Corollary}[section]
+\newtheorem{remark}{{\sc Remark}}[section]
+\newtheorem{example}{Example}[section]
+
+%\numberwithin{algorithm}{section}
+\numberwithin{equation}{section}
+\numberwithin{figure}{section}
+\numberwithin{table}{section}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+\title{A Review on the Applications of PSVD, Datasets and Matrices}
+
+\author{Zheng Wang}
+
+\maketitle
+
+\section{Applications of PSVD}
+\label{apps}
+
+This section introduces some applications that use PSVD to find a low-rank approximation to some specially constructed matrix. The performance of these applications highly relies on the efficiency, accuracy and scalability of the PSVD algorithm.
+% Comment off 'link prediction' and 'KPCA'. (These two require symmetric matrices. We need eigensolvers instead of PSVD solvers.)
+
+\subsection{Latent Semantic Indexing}
+\label{LSI}
+
+LSI \cite{intro2IR}\cite{LSI_SVD}\cite{LSI} is an information retrieval technique. Unlike traditional techniques that lexically match words in the query with words in each document, LSI searches for a semantic structure in word usage across all documents. However, the semantic structure is obscured by the variability in word choice due to synonymy and polysemy. Therefore the PSVD of a term-document matrix is performed to remove the noise caused by variability in word usage and to keep the important semantic structure. With LSI, one can retrieve information based on the conceptual topics of the documents.
+
+Consider a collection of $n$ documents that includes $m$ terms (or words) in total. LSI starts by writing this collection into an $m\times n$ term-document matrix $\mathbf{A}$, where each column represents a document and each row represents a term. The element $a_{ij}$ in $\mathbf{A}$ is a weight measuring how important term $i$ is to document $j$. This weight is calculated based on the frequency of term $i$ in document $j$ and the frequency of term $i$ in the whole collection. Since usually only a small portion of the terms occur in one document, $\mathbf{A}$ is sparse. Considering that the number of conceptual topics covered by the documents is much smaller than the number of documents, PSVD is used to reduce the rank of $\mathbf{A}$. Computing the dominant $k$ singular triplets corresponds to extracting the $k$ most important conceptual topics. The dominant singular vectors span an LSI space where the information retrieval is performed.
+
+Real-world applications involving millions of documents is common. For example, the PubMed Abstracts dataset in Table \ref{dataset} contains over 8 million abstracts of life sciences and biomedical articles. Massive datasets like this impose a great challenge on the PSVD calculation.
+
+% Comment off 'link prediction' and 'KPCA'. (These two require symmetric matrices. We need eigensolvers instead of PSVD solvers.)
+%\subsection{Link Prediction in Social Network}
+%\label{network}
+
+%A social network can be modeled as a graph, where nodes represent interacting users and edges represent connections. Link prediction \cite{link_pred1}\cite{link_pred2} in a social network aims to predict which new edges are likely to occur in the future based on past snapshots of this network. The central step in link prediction is calculating proximity measures that quantify the closeness between nodes: two unconnected nodes are likely to be linked in the future if the proximity between them is sufficiently large \cite{link_pred2}. Many widely-used proximity measures are formulated as functions of the adjacency matrix $\mathbf{A}$ that represents the network. For example, the Katz measure computes $(\mathbf{I} - \beta_K\mathbf{A})^{-1}-\mathbf{I}$, and the rooted PageRank measure evaluates $(1-\beta_{PR})(\mathbf{I}-\beta_{PR}\mathbf{D}^{-1}\mathbf{A})^{-1}$. A general approach to estimate the proximity measures is to replace $\mathbf{A}$ in the matrix functions by its low-rank approximation. This low-rank approximation can be viewed as a noise-reduction procedure that keeps most structure in $\mathbf{A}$ using a greatly simplified representation.
+
+%A social network of $n$ users results in an $n\times n$ adjacency matrix $\mathbf{A}$. Nowadays online social networks are massive in size involving millions of users, which makes computing PSVD of $\mathbf{A}$ challenging.
+
+
+\subsection{PCA for Feature Extraction}
+\label{PCA}
+
+Using a good set of features to describe a dataset is key to success in pattern recognition tasks such as classification, clustering and regression. However, real-world observations usually involve a large number of variables that are redundant and noisy. Therefore extracting a small set of representative features to capture the main structure of a dataset prove to be an essential pre-processing step in data analysis. Feature extraction techniques seek a feature space of reduced dimensionality and map the original high-dimensional data points into it. PCA \cite{PCA}
+% and kernel PCA \cite{KPCA}
+is a widely used dimensionality reduction techniques for feature extraction.
+
+Consider a dataset of $n$ data points $\{\mathbf{x}_1,\cdots,\mathbf{x}_n\}$ that is described by $m$ variables. PCA seeks a $k$-dim $(k < m)$ subspace such that the orthogonal projection of $\{\mathbf{x}_1,\cdots,\mathbf{x}_n\}$ onto this subspace maximizes the variance of the projected data. The orthonormal basis of the wanted subspace consists of the $k$ dominant left singular vectors of the centered data matrix $\mathbf{A} = [\mathbf{a}_1,\cdots,\mathbf{a}_n]$, where $\mathbf{a}_j = \mathbf{x}_j - \frac{1}{n}\sum_{i=1}^n\mathbf{x}_i$. The $j$-th dominant left singular vector of $\mathbf{A}$ is called the $j$-th principal component.
+
+% Kernel PCA
+%Kernel PCA is a nonlinear generalization of the linear PCA via the kernel trick. It first maps the original data points into an inner-product space defined by some kernel function $k(\cdot,\cdot)$, and then performs PCA on the mapped data points. The lower-dimensional representation of the original data points are given by the $k$ dominant singular vectors of the centered kernel matrix $\mathbf{A} = (\mathbf{I}_n-\boldsymbol{1}_n\boldsymbol{1}_n^{\mathrm{T}})\mathbf{K}(\mathbf{I}_n-\boldsymbol{1}_n\boldsymbol{1}_n^{\mathrm{T}})$, where $k_{ij} = k(\mathbf{x}_i,\mathbf{x}_j)$, $i,j = 1,\cdots,n$.
+
+
+\subsection{Eigenfaces for Facial Recognition}
+\label{eigenface}
+
+Facial recognition \cite{monte_carlo_psvd}\cite{eigenface} is the task of identifying a given face in a human face image database. One important technique for facial recognition is computing a set of vectors--the eigenfaces--that best capture the variations among the known face images. These eigenfaces span a low-dimensional ``face space" in which recognition is done. Given a new face image, one can project it into the face space and then compare its position in the face space with the positions of the known images from the database \cite{eigenface}.
+
+Each digital image with $r \times c$ pixels is treated as an $rc$-dimensional column vector by concatenating the columns of pixels in the original image. Therefore a dataset of $n$ such images constitutes an $rc \times n$ matrix. Subtracting the mean of all face vectors from each face vector results in a zero-centered matrix $\mathbf{A}$. The left singular vectors of $\mathbf{A}$ are the principal components \cite{PCA} of the image dataset, and they are called the eigenfaces in the context of facial recognition. Not all the eigenfaces are needed to form a face space for recognition. Since the principal components are directions that capture most variance among the known face images, only the dominant left singular vectors of $\mathbf{A}$ are needed to reconstruct most faces fairly but efficiently.
+
+
+\section{Datasets and Matrices}
+\label{dataset}
+We tested the PSVD algorithms on a large set of matrices that naturally arise from various real-world applications (section \ref{apps}). This section briefly describes types and sources of the datasets, as well as how matrices for testing are constructed from these datasets. Basic statistics of the matrices are summarized in Table \ref{dataset}.
+
+\subsection{Sparse Matrices}
+\label{sparse_mat}
+
+The \textit{Enron Emails} \cite{UCI_data}, \textit{20 Newsgroups} \cite{news20}, \textit{NYtimes News} \cite{UCI_data} and \textit{PubMed Abstracts} \cite{UCI_data} datasets are collections of texts in the form of bag-of-words.
+\begin{itemize}
+\item \textit{Enron Emails} contains $39,861$ emails with $28,102$ unique words.
+\item \textit{20 Newsgroups} contains $11,269$ news articles with $53,975$ unique words.
+\item \textit{NYtimes News} contains $300,000$ news articles with $102,660$ unique words.
+\item \textit{PubMed Abstracts} contains $8,200,000$ journal abstracts with $141,043$ unique words.
+\end{itemize}
+These datasets record the number of occurrences of each word in each text. As needed in the LSI application (section \ref{LSI}), we constructed term-document matrices from the datasets using tf-idf weighting:
+\begin{equation}
+tf\_idf(i,j) = tf(i,j) \times idf(i).
+\label{tfidf}
+\end{equation}
+In eq(\ref{tfidf}), $tf(i,j)$ is the (raw) term frequency of term $i$ in document $j$, i.e. the number of occurrence of term $i$ in document $j$. $idf(i)$ is the inverse document frequency of term $i$:
+\begin{equation}
+idf(i) = log\left(\frac{total~number~of~documents}{df(i)}\right),
+\end{equation}
+where $df(i)$ is the document frequency of term $i$, i.e. the number of documents containing term $i$.
+
+% The \textit{com-Youtube} \cite{network}, \textit{com-Orkut} \cite{network} and \textit{com-LiveJournal} \cite{network} datasets are undirected graphs modeling online social networks, where users are connected if they claim each other friends. The \textit{com-Youtube} dataset contains $1,134,890$ users and $2,987,624$ connections.
+
+\subsection{Dense Matrices}
+\label{dense_mat}
+\begin{itemize}
+\item \textit{MNIST} \cite{MNIST} contains $70,000$ handwritten digits (from 0 to 9), each having $28 \times 28$ pixels.
+\item \textit{Gisette} \cite{UCI_data} was constructed from a subset of the MNIST dataset for a feature selection challenge. It contains $13,500$ handwritten digits (4 and 9), each having $5,000$ features. $2,500$ of the features were created from the pixels and are useful for disambiguating digit 4 from digit 9. The other $2,500$ are distractor features having no predictive power.    
+\item \textit{siam-compete2007} \cite{LIBSVM} was constructed from a collection of texts having $21,519$ documents and $30,438$ terms for a competition on document classification. It uses the binary term frequency and normalizes each data point to unit length.
+\item \textit{epsilon} \cite{LIBSVM} was constructed from an artificial dataset used in the Pascal Large Scale Learning Challenge on classification. It contains $400,000$ data points each having $2,000$ features. 
+\end{itemize}
+
+For each dataset, the average of all data points are subtracted from every data point to form the centered data matrix required by PCA. Therefore these matrices are dense even if the original dataset is sparse.
+
+\begin{table}
+\begin{center}
+\begin{tabular}{|c|c||c|c|c|c|}
+\hline
+\multicolumn{2}{ |c|| }{Dataset} & \multicolumn{4}{|c|}{Matrix}\\
+\hline
+Name & Type & \# rows ($m$) & \# col's ($n$) & \# nonzeros & size (in GB) \\
+\hline
+\hline
+20 Newsgroups & {\multirow{4}{*}{text}} & 53,975 & 11,269 & 1,467,345 & 0.022\\ \cline{1-1}\cline{3-6}
+Enron Emails &  & 28,102 & 39,861 & 3,710,420 & 0.056\\ \cline{1-1}\cline{3-6}
+NYTimes News &  & 102,660 & 300,000 & 69,679,427 & 1.041\\ \cline{1-1}\cline{3-6}
+PubMed Abstracts &  & 141,043 & 8,200,000 & 483,450,157 & 7.265\\
+\hline
+% com-Youtube & {\multirow{3}{*}{social network}} & 1,134,890 & 1,134,890 & 5,975,248 & 0.098\\\cline{1-1}\cline{3-6}
+% com-Orkut &  & 3,072,441 & 3,072,441 & 234,370,166 & 3.515\\\cline{1-1}\cline{3-6}
+% com-LiveJournal &  & 3,997,962 & 3,997,962 & 69,362,378& 1.063\\
+% \hline
+% {\multirow{2}{*}{Gisette}} & {\multirow{3}{*}{handwritten digits}} & 5,000 & 13,500 & 67,500,000 & 0.503\\ \cline{3-6}
+% & & 13,500 & 13,500 & 182,250,000 & 1.358 \\ \cline{1-1}\cline{3-6}
+%\hline
+%MNIST &  & 784 & 70,000 & 54,880,000 & 0.409\\
+Gisette & handwritten & 5,000 & 13,500 & 67,500,000 & 0.503\\ \cline{1-1}\cline{3-6}
+MNIST & digits & 784 & 70,000 & 54,880,000 & 0.409\\
+\hline
+%{\multirow{2}{*}{siam-compete2007}} & {\multirow{2}{*}{text}} & 30,438 & 21,519 & &\\\cline{3-6}
+% & & 21,519 & 21,519 & & \\
+%\hline
+siam-compete2007 & text & 30,438 & 21,519 & 654,995,322 & 4.88\\
+%MNIST8M & handwritten digits & & & & \\
+\hline
+epsilon & artificial & 2,000 & 400,000 & 800,000,000 & 5.961\\
+\hline
+\end{tabular}
+\end{center}
+\caption{Basic statistics of the matrices on which the PSVD solvers are tested.}
+\label{dataset}
+\end{table}
+
+
+\bibliographystyle{plain}
+\bibliography{PSVD_bib}
+
+
+\end{document}
